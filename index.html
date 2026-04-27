@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>Курстар | IT маман бол!</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        nav { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 1rem 2rem; box-shadow: 0 2px 20px rgba(0,0,0,0.1); position: sticky; top: 0; }
+        nav a { color: #667eea; text-decoration: none; margin-right: 25px; padding: 8px 20px; border-radius: 30px; font-weight: 600; transition: all 0.3s; }
+        nav a:hover { background: linear-gradient(135deg, #667eea, #764ba2); color: white; transform: translateY(-2px); }
+        .container { max-width: 1200px; margin: 50px auto; padding: 30px; background: white; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+        .hero { text-align: center; padding: 60px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 25px; color: white; margin-bottom: 40px; }
+        .hero h1 { font-size: 3rem; margin-bottom: 15px; }
+        .btn { background: white; color: #667eea; padding: 14px 35px; border: none; border-radius: 50px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin: 40px 0; }
+        .feature { text-align: center; padding: 30px; background: #f8f9ff; border-radius: 20px; transition: all 0.3s; }
+        .feature:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(102,126,234,0.2); }
+        .feature-icon { font-size: 3rem; margin-bottom: 15px; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .container { animation: slideUp 0.6s ease; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">🏠 Басты бет</a>
+        <a href="courses.html">🎓 Курстар</a>
+        <a href="register.html">📝 Тіркелу</a>
+        <a href="about.html">ℹ️ Сайт жайлы</a>
+        <a href="chat.html">ℹ️ ЧАТ БОТ</a>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>🎓 IT-маман бол!</h1>
+            <p>Ең үздік курстармен танысыңыз. Жұмысқа орналасуға кепілдік!</p>
+            <button class="btn" onclick="location.href='/courses.html'">Курстарды көру →</button>
+        </div>
+
+        <div class="features">
+            <div class="feature"><div class="feature-icon">👨‍🏫</div><h3>Тәжірибелі ұстаздар</h3><p>10+ жыл тәжірибесі бар мамандар</p></div>
+            <div class="feature"><div class="feature-icon">📜</div><h3>Сертификат</h3><p>Курс соңында халықаралық сертификат</p></div>
+            <div class="feature"><div class="feature-icon">💼</div><h3>Жұмысқа орналасу</h3><p>Түлектерді жұмысқа орналастырамыз</p></div>
+        </div>
+    </div>
+</body>
+</html>

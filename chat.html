@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT ACADEMY | AI Чатбот - Дауыспен басқару</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        #chat-widget {
+            width: 550px;
+            height: 750px;
+            background: white;
+            border-radius: 30px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.35);
+        }
+        .header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        .header h2 { font-size: 1.4rem; margin-bottom: 5px; }
+        .header p { font-size: 0.82rem; opacity: 0.95; }
+        .language-bar {
+            display: flex; justify-content: center; gap: 10px;
+            padding: 10px; background: rgba(255,255,255,0.15);
+            margin-top: 10px; border-radius: 30px;
+        }
+        .lang-btn {
+            background: transparent; border: 1px solid rgba(255,255,255,0.3);
+            color: white; padding: 6px 16px; border-radius: 20px;
+            cursor: pointer; font-size: 0.82rem; font-weight: 500;
+            transition: all 0.3s;
+        }
+        .lang-btn.active {
+            background: white; color: #0f172a; border-color: white;
+        }
+        #chat-scroller {
+            flex: 1; padding: 20px; overflow-y: auto;
+            background: #f8fafc; display: flex;
+            flex-direction: column; gap: 12px;
+        }
+        .msg {
+            padding: 13px 16px; border-radius: 18px;
+            font-size: 14.5px; max-width: 85%;
+            word-wrap: break-word; line-height: 1.45;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .bot {
+            background: white; align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-left: 4px solid #1e40af;
+        }
+        .user {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white; align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+        .typing-indicator {
+            display: inline-flex; gap: 5px;
+            padding: 12px 16px; background: white;
+            border-radius: 18px; border-bottom-left-radius: 5px;
+            align-self: flex-start;
+        }
+        .typing-indicator span {
+            width: 8px; height: 8px; background: #1e40af;
+            border-radius: 50%; animation: typing 1.3s infinite;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-9px); } }
+        .input-area {
+            padding: 15px 20px; display: flex; gap: 12px;
+            background: white; border-top: 1px solid #e2e8f0;
+        }
+        input {
+            width: 100%; border: 2px solid #e2e8f0;
+            padding: 13px 16px; background: #f1f5f9;
+            border-radius: 25px; outline: none; font-size: 14.5px;
+            transition: all 0.3s;
+        }
+        input:focus { border-color: #1e40af; background: white; }
+        .btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+        .btn:hover { transform: scale(1.05); }
+        #voice-btn { 
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white; 
+        }
+        #voice-btn.listening { 
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+        #send-btn { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; }
+        .status-bar {
+            padding: 9px 20px; background: #f1f5f9;
+            font-size: 11.5px; color: #64748b;
+            text-align: center; border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status-left { display: flex; align-items: center; gap: 8px; }
+        .status-dot { 
+            width: 8px; height: 8px; background: #22c55e; border-radius: 50%; 
+            display: inline-block; 
+        }
+        .status-dot.recording {
+            background: #ef4444;
+            animation: blink 0.5s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .quick-buttons {
+            display: flex; gap: 8px; padding: 10px 20px;
+            background: white; border-top: 1px solid #e2e8f0;
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+        .quick-btn {
+            background: #e0f2fe; border: none;
+            padding: 7px 14px; border-radius: 20px;
+            font-size: 12px; cursor: pointer;
+            white-space: nowrap; color: #1e40af;
+            transition: all 0.2s;
+        }
+        .quick-btn:hover { background: #1e40af; color: white; transform: translateY(-2px); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #1e40af; border-radius: 10px; }
+        
+        .mic-permission-prompt {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            z-index: 1000;
+            text-align: center;
+            max-width: 300px;
+            display: none;
+        }
+        .mic-permission-prompt button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #1e40af;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div id="chat-widget">
+    <div class="header">
+        <h2><i class="fas fa-code"></i> IT ACADEMY</h2>
+        <p>AI көмекші | 🎤 Дауыспен сұраңыз, нақты жауап алыңыз</p>
+        <div class="language-bar">
+            <button class="lang-btn active" data-lang="kk">🇰🇿 Қазақша</button>
+            <button class="lang-btn" data-lang="ru">🇷🇺 Русский</button>
+            <button class="lang-btn" data-lang="en">🇬🇧 English</button>
+        </div>
+    </div>
+    
+    <div id="chat-scroller">
+        <div class="msg bot" id="welcome-message"></div>
+    </div>
+    
+    <div class="quick-buttons" id="quick-buttons"></div>
+    
+    <div class="input-area">
+        <button id="voice-btn" class="btn"><i class="fas fa-microphone"></i></button>
+        <div class="input-wrapper" style="flex:1">
+            <input type="text" id="user-input" placeholder="..." autocomplete="off">
+        </div>
+        <button id="send-btn" class="btn"><i class="fas fa-paper-plane"></i></button>
+    </div>
+    
+    <div class="status-bar">
+        <div class="status-left">
+            <span class="status-dot" id="status-dot"></span>
+            <span id="status-text">✅ Дайын</span>
+        </div>
+        <div id="voice-status"></div>
+    </div>
+</div>
+
+<script>
+    // ============ ТОЛЫҚ ЖАУАПТАР БАЗАСЫ ============
+    const fullKnowledgeBase = {
+        kk: {
+            welcome: "🤖 <strong>Сәлем! Мен IT Academy AI көмекшісімін!</strong><br><br>💻 <strong>Мен келесі сұрақтарға жауап бере аламын:</strong><br><br>📚 <strong>КУРСТАР:</strong><br>• Python бағдарламалау<br>• Web Development (React, Node.js)<br>• Mobile Development (Android, iOS, Flutter)<br>• Data Science және Machine Learning<br>• Жасанды интеллект (AI/ML)<br>• Java, C++, C# курстары<br><br>💰 <strong>БАҒАЛАР МЕН ҰЗАҚТЫҚ:</strong><br>• Курс бағалары<br>• Оқу ұзақтығы<br>• Төлем түрлері (бөліп төлеу)<br><br>📝 <strong>БАСҚА СҰРАҚТАР:</strong><br>• Қалай жазылуға болады?<br>• Сертификат беріле ме?<br>• Жұмысқа орналасуға көмек пе?<br>• Сабақ кестесі<br>• Мұғалімдер туралы<br><br>🎤 <strong>Микрофон батырмасын басып, дауыспен сұраңыз!</strong>",
+            placeholder: "Сұрағыңызды жазыңыз немесе микрофон арқылы айтыңыз...",
+            statusReady: "✅ Дайын",
+            statusListening: "🎤 Тыңдап тұрмын... Сөйлеңіз",
+            statusThinking: "🤖 Жауап дайындалуда...",
+            responses: {
+                // Курстар туралы
+                "python": "🐍 Python курсы: Бастапқы деңгейден бастап, Django веб-фреймворкі, Data Science, Machine Learning негіздері. Ұзақтығы: 3 ай (аптасына 3 рет 2 сағаттан). Бағасы: 200 000 ₸. Бөліп төлеу: 3 айға 66 667 ₸-ден. Курс соңында менторлық жоба қорғау және сертификат беріледі.",
+                "web development": "🌐 Web Development курсы: HTML5, CSS3, JavaScript, React.js, Node.js, Express.js, MongoDB. Толық циклді веб-әзірлеу. Ұзақтығы: 4 ай. Бағасы: 250 000 ₸. Бөліп төлеу: 4 айға 62 500 ₸-ден. Практикалық жобалар: интернет-дүкен, әлеуметтік желі клоны.",
+                "mobile development": "📱 Mobile Development курсы: Екі бағытта: Android (Kotlin/Java) немесе iOS (Swift). Сондай-ақ React Native, Flutter кросс-платформа. Ұзақтығы: 5 ай. Бағасы: 280 000 ₸. Бөліп төлеу: 5 айға 56 000 ₸-ден. App Store/Google Play шығаруға дейін жетекшілік.",
+                "data science": "📊 Data Science курсы: Python (Pandas, NumPy, Matplotlib, Seaborn), SQL, статистика, Machine Learning (Scikit-learn), көрнекілік (Tableau). Ұзақтығы: 4 ай. Бағасы: 300 000 ₸. Бөліп төлеу: 4 айға 75 000 ₸-ден.",
+                "ai": "🤖 Жасанды интеллект (AI) курсы: Machine Learning, Deep Learning, Neural Networks, TensorFlow, PyTorch, Computer Vision, NLP. Ұзақтығы: 6 ай. Бағасы: 350 000 ₸. Бөліп төлеу: 6 айға 58 334 ₸-ден.",
+                "java": "☕ Java курсы: Java Core, OOP, Collections, Multithreading, Spring Boot, Hibernate, REST API. Ұзақтығы: 4 ай. Бағасы: 230 000 ₸.",
+                "c++": "⚙️ C++ курсы: C++ бастапқыдан, OOP, STL, алгоритмдер, деректер құрылымы. Ұзақтығы: 3 ай. Бағасы: 180 000 ₸.",
+                "c#": "🎮 C# курсы: .NET платформасы, Windows Forms, ASP.NET Core, Unity (ойын әзірлеу). Ұзақтығы: 4 ай. Бағасы: 220 000 ₸.",
+                
+                // Бағалар мен төлем
+                "баға": "💰 Курс бағалары:\n• Python - 200 000 ₸\n• Web Development - 250 000 ₸\n• Mobile Development - 280 000 ₸\n• Data Science - 300 000 ₸\n• AI/ML - 350 000 ₸\n• Java - 230 000 ₸\n• C++ - 180 000 ₸\n• C# - 220 000 ₸\n\n💳 Бөліп төлеу: 3-6 айға 0% комиссиясыз. Kaspi Red, банк карталары, қолма-қол төлем.",
+                "төлем": "💳 Төлем түрлері:\n• Банк картасы (Visa, Mastercard)\n• Kaspi Gold / Kaspi Red\n• Kaspi QR арқылы\n• Банк аударымы\n• Қолма-қол ақша (офисте)\n• 3-6 айға бөліп төлеу (0% комиссиясыз)",
+                
+                // Жазылу
+                "жазылу": "📝 Жазылу үшін 4 жол:\n\n1️⃣ ОНЛАЙН: Сайтымыздағы форманы толтырыңыз (it-academy.kz)\n2️⃣ ТЕЛЕФОН: +7 (700) 000-0000 нөміріне қоңырау шалыңыз\n3️⃣ INSTAGRAM: @it_academy_kz Direct жіберіңіз\n4️⃣ ОФИС: Алматы, Достық 123 (кез келген уақытта келіңіз)\n\n🎁 АЛҒАШҚЫ САБАҚ ТЕГІН! Тәуекел етпей байқап көріңіз.",
+                
+                // Ұзақтық
+                "ұзақтық": "⏰ КУРС ҰЗАҚТЫҒЫ:\n• Python: 3 ай\n• Web Development: 4 ай\n• Mobile Development: 5 ай\n• Data Science: 4 ай\n• AI/ML: 6 ай\n• Java: 4 ай\n• C++: 3 ай\n• C#: 4 ай\n\n📅 Аптасына 3 рет, 2 сағаттан (кешкі 18:00-20:00). Демалыс күндері топтары: 10:00-14:00.",
+                "график": "📅 САБАҚ КЕСТЕСІ:\n\nКешкі топтар:\n• Дүйсенбі, Сәрсенбі, Жұма: 18:00-20:00\n• Сейсенбі, Бейсенбі, Сенбі: 18:00-20:00\n\nДемалыс күндік топтар:\n• Сенбі, Жексенбі: 10:00-14:00 (аптасына 8 сағат)\n\nИнтенсив топтар:\n• Күн сайын 10:00-13:00 (1 ай)",
+                
+                // Сертификат
+                "сертификат": "🎓 СЕРТИФИКАТ:\n• Курсты толық бітіргендерге мемлекеттік үлгідегі сертификат беріледі\n• Халықаралық валидациясы бар\n• LinkedIn-ке қосуға болады\n• Портфолиоға қосатын жобалар",
+                
+                // Жұмыс
+                "жұмыс": "💼 ЖҰМЫСҚА ОРНАЛАСТЫРУ:\n• Курстан кейін көмек көрсетеміз\n• Резюме жазу және портфолио жинау\n• Компанияларға ұсыну (50+ серіктес компания)\n• Стажировкаға жолдама\n• Бітірушілердің 85% 3 ай ішінде жұмысқа орналасады\n• Орташа бастапқы жалақы: 400 000-600 000 ₸",
+                
+                // Мұғалімдер
+                "мұғалім": "👨‍🏫 БІЗДІҢ МҰҒАЛІМДЕР:\n• 5+ жыл тәжірибесі бар senior разработчиктер\n• Нақты IT компанияларда жұмыс істейді (Kaspi, Halyk Bank, EPAM, etc.)\n• Халықаралық сертификаттары бар\n• Менторлық қолдау көрсетеді\n• Күндіз-түні сұрақтарға жауап береді",
+                
+                // Жалпы ақпарат
+                "жоба": "🎯 ПРАКТИКАЛЫҚ ЖОБАЛАР:\n• Курс барысында 5+ нақты жоба жасайсыз\n• Портфолиоға қосатын сайттар, мобильді қосымшалар\n• Командалық жобалар (Git көмегімен)\n• Курс соңында дипломдық жоба қорғау",
+                "бастаушы": "🎯 БАСТАУШЫЛАРҒА:\n• Ешқандай алдын ала білім қажет емес!\n• Нөлден бастап үйретеміз\n• Бастапқы деңгейге арналған арнайы топтар бар\n• 1 айда негіздерді меңгересіз",
+                "online": "💻 ОНЛАЙН ОҚУ:\n• Zoom платформасы арқылы тікелей эфир\n• Сабақтардың жазбалары беріледі\n• Кез келген жерден оқу мүмкіндігі\n• Топтық чат және күндіз-түті қолдау"
+            }
+        },
+        ru: {
+            welcome: "🤖 <strong>Здравствуйте! Я AI помощник IT Academy!</strong><br><br>💻 Отвечу на любые вопросы о курсах и IT<br><br>🎤 Нажмите на микрофон и задайте вопрос голосом!",
+            placeholder: "Напишите или скажите вопрос...",
+            statusReady: "✅ Готов",
+            statusListening: "🎤 Слушаю... Говорите",
+            statusThinking: "🤖 Думаю...",
+            responses: {
+                "python": "🐍 Курс Python: С нуля до Django, Data Science, ML. Длительность: 3 месяца. Стоимость: 200 000 ₸.",
+                "web development": "🌐 Web Development: HTML, CSS, JS, React, Node.js. Длительность: 4 месяца. Цена: 250 000 ₸.",
+                "mobile development": "📱 Mobile Development: Android, iOS, Flutter. Длительность: 5 месяцев. Цена: 280 000 ₸.",
+                "цена": "💰 Цены: Python - 200 000₸, Web - 250 000₸, Mobile - 280 000₸, Data Science - 300 000₸, AI - 350 000₸.",
+                "запись": "📝 Записаться: 1) Сайт 2) Телефон +7 (700) 000-0000 3) Instagram @it_academy_kz",
+                "длительность": "⏰ Длительность: Python - 3 мес, Web - 4 мес, Mobile - 5 мес, Data Science - 4 мес, AI - 6 мес."
+            }
+        },
+        en: {
+            welcome: "🤖 <strong>Hello! I'm IT Academy AI assistant!</strong><br><br>💻 I answer any questions about IT courses<br><br>🎤 Click the microphone and ask by voice!",
+            placeholder: "Type or speak your question...",
+            statusReady: "✅ Ready",
+            statusListening: "🎤 Listening... Speak now",
+            statusThinking: "🤖 Thinking...",
+            responses: {
+                "python": "🐍 Python course: From zero to Django, Data Science, ML. Duration: 3 months. Price: 200,000₸.",
+                "web development": "🌐 Web Development: HTML, CSS, JS, React, Node.js. Duration: 4 months. Price: 250,000₸.",
+                "mobile development": "📱 Mobile Development: Android, iOS, Flutter. Duration: 5 months. Price: 280,000₸.",
+                "price": "💰 Prices: Python - 200,000₸, Web - 250,000₸, Mobile - 280,000₸, Data Science - 300,000₸, AI - 350,000₸.",
+                "enroll": "📝 To enroll: 1) Website 2) Call +7 (700) 000-0000 3) Instagram @it_academy_kz",
+                "duration": "⏰ Duration: Python - 3 months, Web - 4 months, Mobile - 5 months, Data Science - 4 months, AI - 6 months."
+            }
+        }
+    };
+
+    let currentLang = 'kk';
+    let isListening = false;
+    let recognition = null;
+
+    const chatScroller = document.getElementById('chat-scroller');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const voiceBtn = document.getElementById('voice-btn');
+    const statusText = document.getElementById('status-text');
+    const statusDot = document.getElementById('status-dot');
+
+    // ============ АҚЫЛДЫ ЖАУАП БЕРУ ФУНКЦИЯСЫ (ТОЛЫҚ) ============
+    function getSmartResponse(question, lang) {
+        const data = fullKnowledgeBase[lang];
+        const q = question.toLowerCase().trim();
+        
+        // Толық жауаптар кілт сөздер бойынша
+        const keywords = [
+            { words: ['python', 'питон'], response: "python" },
+            { words: ['web', 'веб', 'сайт'], response: "web development" },
+            { words: ['mobile', 'мобиль', 'android', 'андроид', 'ios', 'ios'], response: "mobile development" },
+            { words: ['data science', 'дейта', 'дейте'], response: "data science" },
+            { words: ['ai', 'жасанды интеллект', 'искусственный интеллект', 'нейрон'], response: "ai" },
+            { words: ['java'], response: "java" },
+            { words: ['c++', 'cpp'], response: "c++" },
+            { words: ['c#', 'c sharp'], response: "c#" },
+            { words: ['баға', 'цена', 'price', 'қанша тұрады', 'сколько стоит', 'стоимость'], response: "баға" },
+            { words: ['төлем', 'оплата', 'payment', 'kaspi'], response: "төлем" },
+            { words: ['жазылу', 'запись', 'enroll', 'жазылу', 'қалай жазылу'], response: "жазылу" },
+            { words: ['ұзақтық', 'длительность', 'duration', 'неше ай', 'сколько длится'], response: "ұзақтық" },
+            { words: ['кесте', 'график', 'schedule', 'сағат'], response: "график" },
+            { words: ['сертификат', 'certificate'], response: "сертификат" },
+            { words: ['жұмыс', 'работа', 'job', 'орналасу', 'employment'], response: "жұмыс" },
+            { words: ['мұғалім', 'преподаватель', 'teacher', 'ұстаз'], response: "мұғалім" },
+            { words: ['жоба', 'проект', 'project', 'практика'], response: "жоба" },
+            { words: ['бастаушы', 'начальный', 'beginner', 'нөлден'], response: "бастаушы" },
+            { words: ['online', 'онлайн', 'дистанцион'], response: "online" }
+        ];
+        
+        for (const kw of keywords) {
+            for (const word of kw.words) {
+                if (q.includes(word)) {
+                    const responseKey = kw.response;
+                    if (data.responses[responseKey]) {
+                        return data.responses[responseKey];
+                    }
+                }
+            }
+        }
+        
+        // Стандартты жауап
+        if (lang === 'kk') {
+            return "💡 <strong>IT ACADEMY курстары:</strong>\n\n• 🐍 Python бағдарламалау\n• 🌐 Web Development (React, Node.js)\n• 📱 Mobile Development (Android, iOS)\n• 📊 Data Science және Machine Learning\n• 🤖 Жасанды интеллект (AI/ML)\n• ☕ Java, ⚙️ C++, 🎮 C#\n\n💰 Бағалар: 180 000 - 350 000 ₸ аралығында\n📅 Ұзақтығы: 3-6 ай\n\n🎁 АЛҒАШҚЫ САБАҚ ТЕГІН!\n\n📞 Толық ақпарат алу үшін нақты сұрақ қойыңыз немесе +7 (700) 000-0000 нөміріне қоңырау шалыңыз!";
+        } else if (lang === 'ru') {
+            return "💡 КУРСЫ IT ACADEMY:\n\n• Python, Web, Mobile, Data Science, AI/ML\n• Java, C++, C#\n• Цены: 180 000 - 350 000 ₸\n• Длительность: 3-6 месяцев\n\nПервый урок бесплатно!\nЗвоните: +7 (700) 000-0000";
+        } else {
+            return "💡 IT ACADEMY Courses:\n\n• Python, Web, Mobile, Data Science, AI/ML\n• Java, C++, C#\n• Prices: 180,000 - 350,000 ₸\n• Duration: 3-6 months\n\nFirst lesson free! Call: +7 (700) 000-0000";
+        }
+    }
+
+    // ============ ТІЛДІ ӨЗГЕРТУ ============
+    function setLanguage(lang) {
+        currentLang = lang;
+        const data = fullKnowledgeBase[lang];
+
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.lang === lang);
+        });
+
+        userInput.placeholder = data.placeholder;
+        statusText.textContent = data.statusReady;
+        document.getElementById('welcome-message').innerHTML = data.welcome;
+
+        const quickButtonsContainer = document.getElementById('quick-buttons');
+        const quickQuestions = {
+            kk: [
+                { text: "🐍 Python курсы", question: "Python курсы туралы айтып беріңізші" },
+                { text: "🌐 Web Development", question: "Web Development курсы қандай?" },
+                { text: "📱 Mobile Development", question: "Mobile Development курсы бар ма?" },
+                { text: "💰 Курс бағалары", question: "Курстардың бағасы қандай?" },
+                { text: "🤖 AI курсы", question: "Жасанды интеллект курсы қандай?" },
+                { text: "📝 Қалай жазылу?", question: "Қалай жазылуға болады?" },
+                { text: "💼 Жұмыс", question: "Курстан кейін жұмыс табамын ба?" },
+                { text: "📅 Кесте", question: "Сабақ кестесі қандай?" }
+            ],
+            ru: [
+                { text: "🐍 Python курс", question: "Расскажите о курсе Python" },
+                { text: "🌐 Web Development", question: "Что входит в Web Development?" },
+                { text: "📱 Mobile", question: "Есть курсы по мобильной разработке?" },
+                { text: "💰 Цены", question: "Сколько стоят курсы?" },
+                { text: "🤖 AI курс", question: "Расскажите об AI курсе" },
+                { text: "📝 Записаться", question: "Как записаться на курс?" }
+            ],
+            en: [
+                { text: "🐍 Python", question: "Tell me about Python course" },
+                { text: "🌐 Web Dev", question: "Tell me about Web Development" },
+                { text: "📱 Mobile", question: "Tell me about Mobile Development" },
+                { text: "💰 Prices", question: "What are the prices?" },
+                { text: "🤖 AI course", question: "Tell me about AI course" },
+                { text: "📝 Enroll", question: "How to enroll?" }
+            ]
+        };
+        
+        quickButtonsContainer.innerHTML = '';
+        quickQuestions[lang].forEach(btn => {
+            const b = document.createElement('button');
+            b.className = 'quick-btn';
+            b.textContent = btn.text;
+            b.onclick = () => { 
+                userInput.value = btn.question; 
+                sendMessage(); 
+            };
+            quickButtonsContainer.appendChild(b);
+        });
+    }
+
+    function addMessage(text, type) {
+        const div = document.createElement('div');
+        div.className = `msg ${type}`;
+        div.innerHTML = type === 'bot' ? 
+            `<i class="fas fa-robot" style="margin-right:8px"></i>${text.replace(/\n/g, '<br>')}` : 
+            `<i class="fas fa-user" style="margin-right:8px"></i>${text.replace(/\n/g, '<br>')}`;
+        chatScroller.appendChild(div);
+        chatScroller.scrollTop = chatScroller.scrollHeight;
+        return div;
+    }
+
+    function showTyping() {
+        const t = document.createElement('div');
+        t.className = 'typing-indicator';
+        t.id = 'typing';
+        t.innerHTML = '<span></span><span></span><span></span>';
+        chatScroller.appendChild(t);
+        chatScroller.scrollTop = chatScroller.scrollHeight;
+    }
+
+    function hideTyping() {
+        const t = document.getElementById('typing');
+        if (t) t.remove();
+    }
+
+    async function sendMessage() {
+        const msg = userInput.value.trim();
+        if (!msg) return;
+
+        addMessage(msg, 'user');
+        userInput.value = '';
+        showTyping();
+
+        const data = fullKnowledgeBase[currentLang];
+        statusText.textContent = data.statusThinking;
+
+        setTimeout(() => {
+            const response = getSmartResponse(msg, currentLang);
+            hideTyping();
+            addMessage(response, 'bot');
+            statusText.textContent = data.statusReady;
+        }, 500);
+    }
+
+    // ============ МИКРОФОН (ДАУЫСТЫ ТАНУ) - РҰҚСАТ СҰРАЙДЫ ============
+    function startVoiceRecognition() {
+        // Браузерді тексеру
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            addMessage("❌ Сіздің браузеріңіз дауысты тануды қолдамайды. 🎤 Google Chrome, Microsoft Edge немесе Safari қолданыңыз.", 'bot');
+            return;
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        
+        const langMap = { kk: 'kk-KZ', ru: 'ru-RU', en: 'en-US' };
+        recognition.lang = langMap[currentLang];
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+
+        const data = fullKnowledgeBase[currentLang];
+        
+        recognition.onstart = () => {
+            isListening = true;
+            voiceBtn.classList.add('listening');
+            voiceBtn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+            statusText.textContent = data.statusListening;
+            statusDot.classList.add('recording');
+            
+            // Дауыс толқынын көрсету
+            const voiceStatus = document.getElementById('voice-status');
+            voiceStatus.innerHTML = '<span style="color:#ef4444">🔴 ЖАЗЫЛУДА...</span>';
+        };
+
+        recognition.onresult = (event) => {
+            let finalTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                }
+            }
+            
+            if (finalTranscript) {
+                userInput.value = finalTranscript;
+                setTimeout(() => {
+                    stopVoiceRecognition();
+                    sendMessage();
+                }, 300);
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            let errorMsg = "";
+            
+            switch(event.error) {
+                case 'not-allowed':
+                    errorMsg = "❌ Микрофонға рұқсат беріңіз! 🔓 Браузердің жоғарғы сол жағындағы рұқсат батырмасын басыңыз.";
+                    break;
+                case 'no-speech':
+                    errorMsg = "❌ Дауыс естілмеді. 🎤 Микрофонға жақындап, қайталаңыз.";
+                    break;
+                case 'audio-capture':
+                    errorMsg = "❌ Микрофон табылмады. 🎧 Микрофонды қосып, бетті жаңартыңыз.";
+                    break;
+                case 'network':
+                    errorMsg = "❌ Желі қатесі. Интернетіңізді тексеріңіз.";
+                    break;
+                default:
+                    errorMsg = "❌ Дауысты тану мүмкін болмады. Қайталап көріңіз немесе мәтінмен жазыңыз.";
+            }
+            addMessage(errorMsg, 'bot');
+            stopVoiceRecognition();
+        };
+
+        recognition.onend = () => {
+            stopVoiceRecognition();
+        };
+
+        recognition.start();
+    }
+
+    function stopVoiceRecognition() {
+        if (recognition) {
+            try {
+                recognition.stop();
+            } catch(e) {}
+            recognition = null;
+        }
+        isListening = false;
+        voiceBtn.classList.remove('listening');
+        voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        statusDot.classList.remove('recording');
+        
+        const data = fullKnowledgeBase[currentLang];
+        statusText.textContent = data.statusReady;
+        
+        const voiceStatus = document.getElementById('voice-status');
+        voiceStatus.innerHTML = '';
+    }
+
+    // Микрофон батырмасы
+    voiceBtn.onclick = () => {
+        if (isListening) {
+            stopVoiceRecognition();
+        } else {
+            startVoiceRecognition();
+        }
+    };
+
+    sendBtn.onclick = sendMessage;
+    userInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.onclick = () => {
+            setLanguage(btn.dataset.lang);
+            if (isListening) stopVoiceRecognition();
+        };
+    });
+
+    // Бастапқы іске қосу
+    setLanguage('kk');
+    
+    // Браузердің микрофон рұқсатын тексеру туралы хабарлама
+    setTimeout(() => {
+        addMessage("🎤 <strong>Микрофонды пайдалану үшін:</strong><br><br>1. Жоғарғы сол жақтағы 🔒 белгішесін басыңыз<br>2. Микрофонға рұқсат беріңіз<br>3. 🎤 батырмасын басып, сұрағыңызды айтыңыз", 'bot');
+    }, 1000);
+</script>
+</body>
+</html>

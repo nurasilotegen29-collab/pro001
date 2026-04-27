@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <title>Курстар тізімі</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Poppins', 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; 
+        }
+        nav { 
+            background: rgba(255,255,255,0.95); 
+            backdrop-filter: blur(10px); 
+            padding: 1rem 2rem; 
+            position: sticky; 
+            top: 0; 
+            display: flex; 
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-links a { 
+            color: #667eea; 
+            text-decoration: none; 
+            margin-right: 25px; 
+            padding: 8px 20px; 
+            border-radius: 30px; 
+            font-weight: 600; 
+        }
+        .nav-links a:hover { 
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+            color: white; 
+        }
+        .cart-icon {
+            font-size: 1.5rem;
+            cursor: pointer;
+            position: relative;
+        }
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            font-size: 0.75rem;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container { 
+            max-width: 1200px; 
+            margin: 50px auto; 
+            padding: 30px; 
+            background: white; 
+            border-radius: 30px; 
+        }
+        h1 { 
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+            -webkit-background-clip: text; 
+            background-clip: text; 
+            color: transparent; 
+            font-size: 2.5rem; 
+            margin-bottom: 30px; 
+        }
+        .course-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+            gap: 30px; 
+        }
+        .course-card { 
+            background: white; 
+            border-radius: 20px; 
+            overflow: hidden; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); 
+            transition: all 0.3s; 
+            border: 1px solid #e0e0e0; 
+        }
+        .course-card:hover { 
+            transform: translateY(-10px); 
+            box-shadow: 0 20px 40px rgba(102,126,234,0.2); 
+        }
+        .course-info { padding: 20px; }
+        .course-card h3 { color: #667eea; font-size: 1.3rem; margin-bottom: 10px; }
+        .rating { color: #ffc107; margin: 10px 0; }
+        .price { color: #764ba2; font-size: 1.8rem; font-weight: bold; }
+        .btn { 
+            background: linear-gradient(135deg, #667eea, #764ba2); 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 30px; 
+            cursor: pointer; 
+            width: 100%; 
+            margin-top: 10px; 
+            font-weight: bold; 
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,0.4); }
+        .btn-cart { background: #2ed573; }
+        .btn-cart:hover { background: #1ebc5e; }
+
+        /* Себет модалы */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            width: 90%;
+            max-width: 700px;
+            border-radius: 20px;
+            padding: 25px;
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-links">
+            <a href="index.html">🏠 Басты бет</a>
+            <a href="courses.html">🎓 Курстар</a>
+            <a href="register.html">📝 Тіркелу</a>
+            <a href="about.html">ℹ️ Сайт жайлы</a>
+            <a href="chat.html">ℹ️ ЧАТ БОТ</a>
+        </div>
+        <div class="cart-icon" onclick="showCart()">
+            🛒 <span id="cart-count" class="cart-count">0</span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>🎓 Біздің курстар</h1>
+        <div id="courses" class="course-grid">Жүктелуде...</div>
+    </div>
+
+    <!-- Себет модалы -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <h2>🛒 Себет (<span id="modal-cart-count">0</span>)</h2>
+            <div id="cart-items"></div>
+            <h3 style="margin-top:20px;">Жалпы сома: <span id="total-price" style="color:#764ba2;">0 ₸</span></h3>
+            <button class="btn" onclick="checkout()" style="margin-top:15px;">Төлем жасау →</button>
+            <button class="btn" onclick="closeCart()" style="background:#666; margin-top:10px;">Жабу</button>
+        </div>
+    </div>
+
+    <script>
+        // Курстар (нақты деректер)
+        const courses = [
+            {
+                id: 1,
+                title: "Python-нан бастап Pro деңгейге дейін",
+                rating: 4.9,
+                price: 89000,
+                duration: "3 ай",
+                level: "Бастапқы",
+                students: 1240,
+                description: "Python, Django, Data Science негіздері. Жұмысқа орналасуға көмек."
+            },
+            {
+                id: 2,
+                title: "Веб-дизайн және Figma Master",
+                rating: 4.8,
+                price: 65000,
+                duration: "2 ай",
+                level: "Орта",
+                students: 890,
+                description: "UI/UX дизайн, Figma, прототиптеу және портфолио құру."
+            },
+            {
+                id: 3,
+                title: "Frontend Developer (React)",
+                rating: 5.0,
+                price: 129000,
+                duration: "4 ай",
+                level: "Жоғары",
+                students: 670,
+                description: "HTML, CSS, JavaScript, React, Redux. Нақты жобалар."
+            },
+            {
+                id: 4,
+                title: "Digital Marketing 2026",
+                rating: 4.7,
+                price: 75000,
+                duration: "2.5 ай",
+                level: "Бастапқы",
+                students: 1450,
+                description: "SMM, Google Ads, SEO, контент маркетинг."
+            },
+            {
+                id: 5,
+                title: "Англий тілі Business деңгей",
+                rating: 4.6,
+                price: 45000,
+                duration: "3 ай",
+                level: "Орта",
+                students: 2100,
+                description: "Business English, IELTS дайындық, сөйлеу практикасы."
+            }
+        ];
+
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        function updateCartCount() {
+            document.getElementById('cart-count').textContent = cart.length;
+        }
+
+        function addToCart(course) {
+            if (!cart.some(item => item.id === course.id)) {
+                cart.push(course);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartCount();
+                alert(`${course.title} себетке қосылды! 🛒`);
+            } else {
+                alert("Бұл курс уже себетте!");
+            }
+        }
+
+        function renderCourses() {
+            const container = document.getElementById('courses');
+            container.innerHTML = courses.map(c => `
+                <div class="course-card">
+                    <div class="course-info">
+                        <h3>${c.title}</h3>
+                        <div class="rating">${'⭐'.repeat(Math.floor(c.rating))} ${c.rating}</div>
+                        <div class="price">${c.price.toLocaleString()} ₸</div>
+                        <p>⏱️ ${c.duration} | 🎯 ${c.level}</p>
+                        <p>👨‍🎓 ${c.students}+ студент</p>
+                        <p style="color:#666; font-size:0.85rem">${c.description}</p>
+                        <span class="badge" style="background:#e8eaff; color:#667eea; padding:5px 12px; border-radius:20px;">${c.level}</span>
+                        
+                        <button class="btn" onclick='addToCart(${JSON.stringify(c)})'>Себетке қосу 🛒</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Себетті көрсету
+        function showCart() {
+            const modal = document.getElementById('cart-modal');
+            const itemsDiv = document.getElementById('cart-items');
+            let html = '';
+            let total = 0;
+
+            if (cart.length === 0) {
+                html = '<p>Себет бос</p>';
+            } else {
+                html = cart.map((item, index) => {
+                    total += item.price;
+                    return `
+                        <div class="cart-item">
+                            <div>
+                                <strong>${item.title}</strong><br>
+                                <small>${item.price.toLocaleString()} ₸</small>
+                            </div>
+                            <button onclick="removeFromCart(${index})" style="background:#ff4757; color:white; border:none; padding:8px 12px; border-radius:8px;">Өшіру</button>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            itemsDiv.innerHTML = html;
+            document.getElementById('modal-cart-count').textContent = cart.length;
+            document.getElementById('total-price').textContent = total.toLocaleString() + ' ₸';
+            modal.style.display = 'block';
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            showCart();
+        }
+
+        function closeCart() {
+            document.getElementById('cart-modal').style.display = 'none';
+        }
+
+        function checkout() {
+            if (cart.length === 0) return;
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            alert(`Сатып алу сәтті аяқталды! Жалпы сома: ${total.toLocaleString()} ₸\n\nРақмет! 🎉`);
+            cart = [];
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            closeCart();
+        }
+
+        // Іске қосу
+        renderCourses();
+        updateCartCount();
+    </script>
+</body>
+</html>

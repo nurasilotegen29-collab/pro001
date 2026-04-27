@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тіркелу | Курстар платформасы</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        nav { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 1rem 2rem; box-shadow: 0 2px 20px rgba(0,0,0,0.1); position: sticky; top: 0; }
+        nav a { color: #667eea; text-decoration: none; margin-right: 25px; padding: 8px 20px; border-radius: 30px; font-weight: 600; transition: all 0.3s; }
+        nav a:hover { background: linear-gradient(135deg, #667eea, #764ba2); color: white; transform: translateY(-2px); }
+        
+        .container { max-width: 550px; margin: 60px auto; padding: 40px; background: white; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+        
+        h1 { background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 2rem; text-align: center; margin-bottom: 10px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 0.9rem; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 0.9rem; }
+        input { width: 100%; padding: 14px 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 1rem; transition: all 0.3s; font-family: inherit; }
+        input:focus { border-color: #667eea; outline: none; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        
+        button { width: 100%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 14px; border: none; border-radius: 40px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.3s; font-family: inherit; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(102,126,234,0.4); }
+        
+        .success-message { background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%); color: #155724; padding: 12px 18px; border-radius: 12px; margin-top: 20px; text-align: center; font-weight: 500; }
+        .error-message { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: #721c24; padding: 12px 18px; border-radius: 12px; margin-top: 20px; text-align: center; font-weight: 500; }
+        
+        .login-link { text-align: center; margin-top: 25px; color: #666; font-size: 0.85rem; }
+        .login-link a { color: #667eea; text-decoration: none; font-weight: 600; }
+        .login-link a:hover { text-decoration: underline; }
+        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .container { animation: slideUp 0.6s ease; }
+        
+        .icon-top { text-align: center; font-size: 3rem; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">🏠 Басты бет</a>
+        <a href="courses.html">🎓 Курстар</a>
+        <a href="register.html">📝 Тіркелу</a>
+        <a href="about.html">ℹ️ Сайт жайлы</a>
+       <a href="chat.html">ℹ️ ЧАТ БОТ</a>
+    </nav>
+
+    <div class="container">
+        <div class="icon-top">🎓✨</div>
+        <h1>Аккаунт жасаңыз</h1>
+        <p class="subtitle">IT саласында табысты мансап бастаңыз</p>
+        
+        <form id="registerForm">
+            <div class="form-group">
+                <label>👤 Толық аты-жөні</label>
+                <input type="text" id="fullname" placeholder="Мысалы: Асан Асанов" required>
+            </div>
+            <div class="form-group">
+                <label>🔑 Логин</label>
+                <input type="text" id="username" placeholder="Логиніңізді енгізіңіз" required>
+            </div>
+            <div class="form-group">
+                <label>🔒 Құпия сөз</label>
+                <input type="password" id="password" placeholder="Құпия сөз (кемінде 6 символ)" required>
+            </div>
+            <div class="form-group">
+                <label>📧 Email</label>
+                <input type="email" id="email" placeholder="example@email.com">
+            </div>
+            <button type="submit">Тіркелу →</button>
+        </form>
+        <div id="message"></div>
+        <div class="login-link">
+            <p>Аккаунтыңыз бар ма? <a href="/login.html">Кіру</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            if (password.length < 6) {
+                document.getElementById('message').innerHTML = '<div class="error-message">❌ Құпия сөз кемінде 6 символ болуы керек!</div>';
+                return;
+            }
+            const data = {
+                fullname: document.getElementById('fullname').value,
+                username: document.getElementById('username').value,
+                password: password,
+                email: document.getElementById('email').value
+            };
+            const res = await fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            const msgDiv = document.getElementById('message');
+            if (result.success) {
+                msgDiv.innerHTML = `<div class="success-message">✅ ${result.message}</div>`;
+                document.getElementById('registerForm').reset();
+                setTimeout(() => { window.location.href = '/courses.html'; }, 2000);
+            } else {
+                msgDiv.innerHTML = `<div class="error-message">❌ ${result.message}</div>`;
+            }
+        });
+    </script>
+</body>
+</html>
